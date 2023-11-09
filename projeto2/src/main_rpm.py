@@ -16,12 +16,14 @@ TOKEN = "token"
 ORG = "inspermileage"
 BUCKET = "trainee"
 
-
 def main():
     # Condições iniciais
     acceleration = 0.0
     speed = 0.0
     interval = 1.0
+    wheel_radius = 0.3
+
+    kmh2rpm = lambda kmh: kmh * ( 25 / ( 3.14 * 3 * wheel_radius ) )
 
     # Cria um cliente do InfluxDB
     with InfluxDBClient(url=URL, token=TOKEN, org=ORG) as client:
@@ -45,7 +47,7 @@ def main():
                 speedPoint = (
                     db.Point("carro")
                     .tag("roda", "Roda")
-                    .field("velocidade", speed)
+                    .field("velocidade_rpm", kmh2rpm(speed))
                     .time(now, db.WritePrecision.MS)
                 )
                 # Envia para o dado no cliente de escrita
@@ -60,7 +62,7 @@ def main():
                     raise Exception("Request not successful!")
 
                 # Log da velocidade
-                print(f"\r{now.time()}: {speed:+07.2f} km/h ({acceleration:+.2f})", end="")
+                print(f"\r{now.time()}: {kmh2rpm(speed):+07.2f} rpm", end="")
 
                 # Espera um tempo entre cada escrita
                 time.sleep(interval)
